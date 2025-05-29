@@ -1,41 +1,57 @@
-import formidable from 'formidable';
-import fs from 'fs';
-import pdfParse from 'pdf-parse';
-import { Configuration, OpenAIApi } from 'openai';
+// ✅ /api/analizar.js
+import { Configuration, OpenAIApi } from "openai";
+import formidable from "formidable";
+import fs from "fs/promises";
+import pdfParse from "pdf-parse";
 
 export const config = {
-  api: { bodyParser: false }
+  api: {
+    bodyParser: false
+  }
 };
 
 export default async function handler(req, res) {
-  const form = new formidable.IncomingForm();
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      console.error("❌ Error al procesar el archivo:", err);
-      return res.status(500).send("Error al subir el archivo");
-    }
+  try {
+    const form = new formidable.IncomingForm();
+    form.uploadDir = "/tmp";
+    form.keepExtensions = true;
 
-    try {
-      const pdfPath = files.file.filepath;
-      const buffer = fs.readFileSync(pdfPath);
-      const data = await pdfParse(buffer);
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        console.error("Error al procesar archivo:", err);
+        return res.status(500).send("Error al recibir el archivo");
+      }
 
-      const openai = new OpenAIApi(new Configuration({
-        apiKey: process.env.OPENAI_API_KEY
-      }));
+      const uploadedFile = files.file;
+      if (!uploadedFile || !uploadedFile.filepath) {
+        return res.status(400).send("No se recibió ningún archivo");
+      }
 
-      const prompt = `Revisa el siguiente contrato y genera un informe con observaciones, errores, riesgos o sugerencias de mejora:\n\n${data.text.slice(0, 8000)}`;
+      try {
+        const buffer = await fs.readFile(uploadedFile.filepath);
+        const data = await pdfParse(buffer);
 
-      const completion = await openai.createChatCompletion({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }]
-      });
+        const openai = new OpenAIApi(new Configuration({
+          apiKey: process.env.OPENAI_API_KEY
+        }));
 
-      const resultado = completion.data.choices[0].message.content;
-      res.send(resultado);
-    } catch (error) {
-      console.error("❌ Error en el análisis:", error);
-      res.status(500).send("Error durante el análisis del PDF");
-    }
-  });
+        const prompt = `Eres un abogado experto en contratos. Analiza el siguiente documento y entrega un informe detallado con observaciones, errores, ambigüedades y sugerencias de mejora:\n\n${data.text.slice(0, 8000)}`;
+
+        const completion = await openai.createChatCompletion({
+          model: "gpt-4",
+          messages: [{ role: "user", content: prompt }]
+        });
+
+        const result = completion.data.choices[0].message.content;
+        res.status(200).send(result);
+
+      } catch (error) {
+        console.error("Error al analizar el PDF:", error);
+        res.status(500).send("Error al procesar el PDF");
+      }
+    });
+  } catch (err) {
+    console.error("Error general:", err);
+    res.status(500).send("Error interno del servidor");
+  }
 }
