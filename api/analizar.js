@@ -10,7 +10,11 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  const form = new formidable.IncomingForm({ keepExtensions: true, uploadDir: "/tmp" });
+  const form = new formidable.IncomingForm({
+  keepExtensions: true,
+  uploadDir: "/tmp",
+  maxFileSize: 30 * 1024 * 1024 // 30 MB
+});
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
