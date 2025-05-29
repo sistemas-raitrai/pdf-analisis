@@ -1,40 +1,50 @@
+// /api/analizar.js
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs/promises";
 import pdfParse from "pdf-parse";
 
 export const config = {
-  api: { bodyParser: false }
+  api: {
+    bodyParser: false
+  }
 };
 
 export default async function handler(req, res) {
-  const form = new formidable.IncomingForm();
-  form.uploadDir = "/tmp";
-  form.keepExtensions = true;
+  const form = new formidable.IncomingForm({ keepExtensions: true, uploadDir: "/tmp" });
 
   form.parse(req, async (err, fields, files) => {
-    if (err) return res.status(500).send("Error al subir el archivo");
+    if (err) {
+      console.error("❌ Error al parsear el formulario:", err);
+      return res.status(500).send("Error al procesar el archivo");
+    }
 
     try {
-      const uploadedFile = files.file;
-      const buffer = await fs.readFile(uploadedFile.filepath);
+      const file = files.file;
+      if (!file || !file.filepath) {
+        return res.status(400).send("No se recibió ningún archivo PDF válido");
+      }
+
+      const buffer = await fs.readFile(file.filepath);
       const data = await pdfParse(buffer);
 
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
       });
 
-      const prompt = `Eres un abogado experto en redacción de contratos. Analiza el siguiente contrato y entrega un informe con observaciones, errores, ambigüedades y sugerencias de mejora:\n\n${data.text.slice(0, 8000)}`;
+      const prompt = `Eres un abogado experto en redacción de contratos. Analiza el siguiente contrato y entrega un informe claro con observaciones, errores, ambigüedades y recomendaciones de mejora:\n\n${data.text.slice(0, 8000)}`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
         messages: [{ role: "user", content: prompt }]
       });
 
-      res.status(200).send(completion.choices[0].message.content);
+      const resultado = completion.choices[0].message.content;
+      res.status(200).send(resultado);
+
     } catch (error) {
-      console.error("Error en el análisis:", error);
-      res.status(500).send("Error al analizar el documento");
+      console.error("❌ Error interno:", error);
+      res.status(500).send("Error al procesar el PDF");
     }
   });
 }
