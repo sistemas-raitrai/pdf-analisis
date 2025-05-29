@@ -4,8 +4,6 @@
       "maxDuration": 30,
       "memory": 1024
     }
-  },
-  "limits": {
-    "payloadSize": "20mb"
   }
 }
+
