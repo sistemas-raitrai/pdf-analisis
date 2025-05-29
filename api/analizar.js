@@ -8,6 +8,8 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  console.log("🔁 Iniciando análisis...");
+
   const form = new formidable.IncomingForm({
     keepExtensions: true,
     uploadDir: "/tmp",
@@ -21,9 +23,32 @@ export default async function handler(req, res) {
     }
 
     try {
-      const file = Object.values(files)[0]; // accede directamente al archivo
+      const file = files.file?.[0] || Object.values(files)[0];
+      if (!file || !file.filepath) {
+        console.error("❌ Archivo inválido:", file);
+        return res.status(400).send("No se recibió ningún archivo PDF válido");
+      }
+
+      console.log("📦 Archivo recibido:", {
+        name: file.originalFilename || file.newFilename || "desconocido",
+        tipo: file.mimetype,
+        ruta: file.filepath,
+        tamaño: file.size
+      });
+
+      // Verificamos si el archivo realmente existe
+      try {
+        await fs.access(file.filepath);
+        console.log("✅ Archivo accesible en:", file.filepath);
+      } catch (err) {
+        console.error("🚫 El archivo no está accesible:", err);
+        return res.status(500).send("No se pudo acceder al archivo subido");
+      }
+
       const buffer = await fs.readFile(file.filepath);
       const data = await pdfParse(buffer);
+
+      console.log("📄 Texto extraído del PDF (primeros 100 caracteres):", data.text.slice(0, 100));
 
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
@@ -37,10 +62,12 @@ export default async function handler(req, res) {
       });
 
       const resultado = completion.choices[0].message.content;
+      console.log("✅ Respuesta generada por OpenAI");
+
       res.status(200).send(resultado);
 
     } catch (error) {
-      console.error("❌ Error interno:", error);
+      console.error("❌ Error interno durante el análisis:", error);
       res.status(500).send("Error al procesar el PDF");
     }
   });
