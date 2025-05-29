@@ -4,17 +4,15 @@ import fs from "fs/promises";
 import pdfParse from "pdf-parse";
 
 export const config = {
-  api: {
-    bodyParser: false
-  }
+  api: { bodyParser: false }
 };
 
 export default async function handler(req, res) {
   const form = new formidable.IncomingForm({
-  keepExtensions: true,
-  uploadDir: "/tmp",
-  maxFileSize: 30 * 1024 * 1024 // 30 MB
-});
+    keepExtensions: true,
+    uploadDir: "/tmp",
+    maxFileSize: 30 * 1024 * 1024 // 30 MB
+  });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
@@ -23,11 +21,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      const file = files.file;
-      if (!file || !file.filepath) {
-        return res.status(400).send("No se recibió ningún archivo PDF válido");
-      }
-
+      const file = Object.values(files)[0]; // accede directamente al archivo
       const buffer = await fs.readFile(file.filepath);
       const data = await pdfParse(buffer);
 
