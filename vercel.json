@@ -2,8 +2,7 @@
   "functions": {
     "api/analizar.js": {
       "maxDuration": 30,
-      "memory": 1024,
-      "maxSize": "20mb"
+      "memory": 1024
     }
   }
 }
