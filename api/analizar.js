@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         apiKey: process.env.OPENAI_API_KEY
       });
 
-      const prompt = `Eres un abogado experto en redacción de contratos. Analiza el siguiente contrato y entrega un informe claro con observaciones, errores, ambigüedades y recomendaciones de mejora:\n\n${data.text.slice(0, 8000)}`;
+      const prompt = `Eres un abogado experto en redacción de contratos para agencias de viajes de estudiantes. Analiza el siguiente contrato y entrega un informe claro con observaciones, errores, ambigüedades y recomendaciones de mejora:\n\n${data.text.slice(0, 8000)}`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",
