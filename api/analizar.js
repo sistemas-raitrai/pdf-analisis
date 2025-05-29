@@ -1,4 +1,3 @@
-// /api/analizar.js
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs/promises";
