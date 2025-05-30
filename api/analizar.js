@@ -1,11 +1,7 @@
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs/promises";
-import { PDFDocument } from "pdf-lib";
-
-export const config = {
-  api: { bodyParser: false }
-};
+import pdfParse from "pdf-parse";
 
 export default async function handler(req, res) {
   console.log("🔁 Iniciando análisis de documento PDF...");
@@ -32,16 +28,10 @@ export default async function handler(req, res) {
       }
 
       console.log("📄 Procesando archivo:", filePath);
-      const fileBuffer = await fs.readFile(filePath);
+      const buffer = await fs.readFile(filePath);
 
-      // 🧠 Cargar PDF y extraer texto (usando workaround porque pdf-lib no tiene método directo)
-      const pdfDoc = await PDFDocument.load(fileBuffer);
-      const pages = pdfDoc.getPages();
-      const textPages = await Promise.all(
-        pages.map(page => page.getTextContent?.()?.items?.map?.(i => i.str).join(" ") || "") // fallback
-      );
-
-      const allText = textPages.join("\n");
+      const data = await pdfParse(buffer);
+      const allText = data.text;
       console.log("📃 Texto extraído. Longitud:", allText.length);
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
