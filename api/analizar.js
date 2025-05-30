@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs/promises";
-import pdf from "pdf-parse"; 
+import { PDFDocument } from "pdf-lib";
 
 export const config = {
   api: { bodyParser: false }
@@ -32,15 +32,21 @@ export default async function handler(req, res) {
       }
 
       console.log("📄 Procesando archivo:", filePath);
-      const buffer = await fs.readFile(filePath);
-      console.log("✅ Buffer cargado. Tamaño:", buffer.length);
+      const fileBuffer = await fs.readFile(filePath);
 
-      const data = await pdf(buffer); // usando pdf-parse/lib/pdf.js directamente
-      console.log("📃 Texto extraído. Longitud:", data.text.length);
+      // 🧠 Cargar PDF y extraer texto (usando workaround porque pdf-lib no tiene método directo)
+      const pdfDoc = await PDFDocument.load(fileBuffer);
+      const pages = pdfDoc.getPages();
+      const textPages = await Promise.all(
+        pages.map(page => page.getTextContent?.()?.items?.map?.(i => i.str).join(" ") || "") // fallback
+      );
+
+      const allText = textPages.join("\n");
+      console.log("📃 Texto extraído. Longitud:", allText.length);
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      const prompt = `Eres un abogado experto en redacción de contratos para agencias de viajes de estudiantes. Analiza el siguiente contrato y entrega un informe claro con observaciones, errores, ambigüedades y recomendaciones de mejora:\n\n${data.text.slice(0, 8000)}`;
+      const prompt = `Eres un abogado experto en redacción de contratos para agencias de viajes de estudiantes. Analiza el siguiente contrato y entrega un informe claro con observaciones, errores, ambigüedades y recomendaciones de mejora:\n\n${allText.slice(0, 8000)}`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4",
