@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs/promises";
-import { default as pdf } from "pdf-parse/lib/pdf.js";
+import pdf from "pdf-parse"; 
 
 export const config = {
   api: { bodyParser: false }
