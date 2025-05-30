@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs/promises";
-import pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse-fix";
 
 export default async function handler(req, res) {
   console.log("🔁 Iniciando análisis de documento PDF...");
