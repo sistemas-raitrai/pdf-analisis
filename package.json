@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "start": "node api/analizar.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "formidable": "^3.5.0",
