@@ -33,24 +33,37 @@
   </div>
 
   <!-- 📜 Script de subida -->
-  <script>
-    async function subirPDF() {
-      const input = document.getElementById("pdfInput");
-      const file = input.files[0];
-      if (!file) return alert("Selecciona un archivo PDF");
+<script>
+  async function subirPDF() {
+    const input = document.getElementById("pdfInput");
+    const file = input.files[0];
+    
+    if (!file) {
+      alert("Selecciona un archivo PDF");
+      return;
+    }
 
-      const formData = new FormData();
-      formData.append("file", file);
+    console.log("📂 Archivo seleccionado:", file); // ⬅️ LOG 1: Verifica que sí se seleccionó
 
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
       const res = await fetch("/api/analizar", {
         method: "POST",
         body: formData
       });
 
+      console.log("📤 Solicitud enviada. Estado:", res.status); // ⬅️ LOG 2: Código HTTP
+
       const text = await res.text();
       document.getElementById("resultado").textContent = text;
+    } catch (err) {
+      console.error("❌ Error al enviar el archivo:", err);
+      alert("Error al conectar con el servidor");
     }
-  </script>
+  }
+</script>
 
 </body>
 </html>
