@@ -1,9 +1,15 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/analizar.js", "use": "@vercel/node" }
+    {
+      "src": "api/analizar.js",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
-    { "src": "/api/analizar", "dest": "/api/analizar.js" }
+    {
+      "src": "/api/analizar",
+      "dest": "/api/analizar.js"
+    }
   ]
 }
