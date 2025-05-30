@@ -1,9 +1,0 @@
-{
-  "functions": {
-    "api/analizar.js": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  }
-}
-
