@@ -10,7 +10,7 @@ export const config = {
 export default async function handler(req, res) {
   console.log("📥 Iniciando análisis de archivo...");
 
-  const form = new formidable.IncomingForm({
+  const form = formidable({
     keepExtensions: true,
     uploadDir: "/tmp",
     maxFileSize: 30 * 1024 * 1024
