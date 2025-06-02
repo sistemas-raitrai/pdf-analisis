@@ -8,6 +8,8 @@
   ],
   "routes": [
     { "src": "/api/analizar", "dest": "/api/analizar.js" },
+    { "src": "/estilos.css", "dest": "/estilos.css" },
+    { "src": "/logo.png", "dest": "/logo.png" },
     { "src": "/", "dest": "/index.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
