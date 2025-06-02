@@ -71,7 +71,18 @@ Revisa exclusivamente los elementos personalizables del contrato tipo (nombre de
       if (opciones.includes("anexo1")) {
         prompt += `
 🔹 ANEXO 1 (Itinerario y Programa):
-Revisa que el itinerario y programa sean coherentes, completos y específicos. Evalúa si los servicios incluidos y excluidos están bien detallados, si los valores son correctos y si la política de cambio o cancelación es clara. Señala errores frecuentes.\n\n`;
+Revisa el itinerario detallado día por día y compáralo con la sección final donde se enumeran los servicios que el programa "Incluye".
+
+1. Asegúrate de que todas las actividades mencionadas día por día estén también reflejadas en la lista de "Incluye", y viceversa. Detecta si falta alguna actividad o si hay inconsistencias.
+2. Si puedes, haz un pequeño resumen con bullets indicando las actividades por día (Día 1, Día 2, etc.) para facilitar la revisión por parte del usuario.
+3. Verifica también si los valores, fechas y condiciones de cambio o cancelación son claras y coherentes.
+4. Indica errores frecuentes como:
+   - Actividades mencionadas pero no incluidas.
+   - Incoherencias entre días (ej: check-out el Día 4 pero actividades Día 5).
+   - Listas de "Incluye" mal redactadas, incompletas o contradictorias.
+5. Sé claro, directo y útil para un usuario que solo quiere saber qué revisar y qué corregir.
+
+Entrega un análisis claro y corto, sin repetir el texto completo del contrato.\n\n`;
       }
 
       if (opciones.includes("anexo2")) {
