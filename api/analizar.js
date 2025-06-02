@@ -123,5 +123,21 @@ Haz una revisión básica de este anexo. Solo alerta si hay omisiones graves o i
       console.error("❌ Error interno:", error);
       res.status(500).send("Error al procesar el archivo.");
     }
+    if (opciones.includes("otro")) {
+      prompt += `
+🔹 OTRO TIPO DE DOCUMENTO (Ortografía y Redacción):
+Haz una revisión general del texto. Detecta errores de ortografía, palabras mal escritas, incoherencias gramaticales o frases mal construidas.
+
+1. Usa ejemplos concretos. Cita la palabra o frase exacta con error.
+2. Sugiere una versión corregida.
+3. No necesitas hacer un análisis jurídico o técnico. Solo enfócate en mejorar la redacción, claridad y estilo del documento.
+
+Formato recomendado:
+- ❌ Error: "fucionado" → ✅ Corrección: "fusionado"
+- ❌ Frase confusa: "por motivo de razones ajenas" → ✅ Sugerencia: "por causas externas".
+
+Hazlo en formato conciso, útil y fácil de leer.
+\n\n`;
+}
   });
 }
