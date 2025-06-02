@@ -51,31 +51,34 @@
     async function subirPDF() {
       const input = document.getElementById("pdfInput");
       const file = input.files[0];
-
+      const opciones = Array.from(document.querySelectorAll("input[name='opcion']:checked")).map(cb => cb.value);
+    
       if (!file) {
         alert("Selecciona un archivo DOCX");
         return;
       }
-
+    
       const formData = new FormData();
       formData.append("file", file);
-
-      // ✅ Obtener opciones seleccionadas
-      const checkboxes = document.querySelectorAll('input[name="opcion"]:checked');
-      const opciones = Array.from(checkboxes).map(cb => cb.value);
       formData.append("opciones", JSON.stringify(opciones));
-
+    
+      // ⏳ Mostrar mensaje de carga
+      document.getElementById("estado").textContent = "⏳ Analizando el documento...";
+    
       try {
         const res = await fetch("/api/analizar", {
           method: "POST",
           body: formData
         });
-
+    
         const text = await res.text();
         document.getElementById("resultado").textContent = text;
       } catch (err) {
-        console.error("❌ Error al enviar el archivo:", err);
-        alert("Error al conectar con el servidor");
+        console.error("❌ Error:", err);
+        alert("Hubo un error al conectar con el servidor.");
+      } finally {
+        // ✅ Limpiar mensaje
+        document.getElementById("estado").textContent = "";
       }
     }
   </script>
