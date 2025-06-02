@@ -73,19 +73,25 @@ Revisa exclusivamente los elementos personalizables del contrato tipo (nombre de
       if (opciones.includes("anexo1")) {
         prompt += `
 🔹 ANEXO 1 (Itinerario y Programa):
-Revisa el itinerario detallado día por día y compáralo con la sección final donde se enumeran los servicios que el programa "Incluye".
+Revisa lo siguiente de forma estricta y concreta:
 
-1. Asegúrate de que todas las actividades mencionadas día por día estén también reflejadas en la lista de "Incluye", y viceversa. Detecta si falta alguna actividad o si hay inconsistencias.
-2. Si puedes, haz un pequeño resumen con bullets indicando las actividades por día (Día 1, Día 2, etc.) para facilitar la revisión por parte del usuario.
-3. Verifica también si los valores, fechas y condiciones de cambio o cancelación son claras y coherentes.
-4. Indica errores frecuentes como:
-   - Actividades mencionadas pero no incluidas.
-   - Incoherencias entre días (ej: check-out el Día 4 pero actividades Día 5).
-   - Listas de "Incluye" mal redactadas, incompletas o contradictorias.
-5. Sé claro, directo y útil para un usuario que solo quiere saber qué revisar y qué corregir.
+1. Detecta si las actividades indicadas día por día (por ejemplo: "Floating", "Escape Room", "Discoteca", "Tambo Viejo", etc.) están **mencionadas también en la sección final del anexo ("El programa incluye")**. Enumera las actividades por día si puedes.
 
-Entrega un análisis claro y corto, sin repetir el texto completo del contrato.\n\n`;
-      }
+2. Marca con ⚠️ si hay alguna actividad que aparece en el itinerario diario y no aparece en la lista de “Incluye” o viceversa.
+
+3. Revisa si hay **errores de coherencia** como:
+   - Actividades repetidas o en días no posibles (ej: Floating el mismo día de salida).
+   - Inconsistencias de horario (ej: actividades después del check-out).
+   - Cuotas mal descritas o valores no coincidentes con lo indicado al final.
+
+4. Da observaciones breves y claras. Usa este formato:
+   - ⚠️ Actividad "Escape Room" aparece el Día 4 pero no está en la lista de “Incluye”. Agregar en la sección final.
+   - ⚠️ En el Día 2 se menciona “Discoteca”, pero no hay traslado descrito. Confirmar.
+
+5. Si puedes, sugiere la corrección concreta para cada observación.
+
+No repitas el texto completo. Usa lenguaje claro, sin jerga técnica. Resume el itinerario por día si puedes para facilitar la revisión rápida por parte del vendedor.\n\n`;
+}
 
       if (opciones.includes("anexo2")) {
         prompt += `
