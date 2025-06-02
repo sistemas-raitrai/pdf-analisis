@@ -38,7 +38,23 @@ export default async function handler(req, res) {
       console.log("📃 Texto extraído. Longitud:", extractedText.length);
 
       // Generación dinámica del prompt
-      let prompt = "Eres un abogado experto en contratos de agencias de viajes estudiantiles. Analiza el siguiente texto de acuerdo a las instrucciones:\n\n";
+      let prompt = `
+      Eres un revisor experto en contratos de viajes estudiantiles. Tu objetivo es entregar un informe corto, claro y útil para vendedores que no leen mucho texto.
+      
+      1. Empieza con un diagnóstico general al estilo de:
+      - ✅ Todo OK. No se detectan errores graves.
+      - ⚠️ Sugerencias menores (especificar).
+      - ❗Atención: hay incoherencias que deben corregirse (indicar cuáles).
+      
+      2. Luego, haz observaciones concretas en bullets, indicando:
+      - Qué parte revisar (ej: nombres de firmantes, valores, anexos).
+      - Qué corregir (si aplica).
+      - Sé claro y directo, sin lenguaje técnico.
+      
+      3. No repitas el texto completo del contrato, solo comenta lo importante. Si hay errores ortográficos o de formato, indica ejemplos.
+      
+      Analiza el siguiente texto según las instrucciones marcadas por el usuario:\n\n`;
+
 
       if (opciones.includes("contrato")) {
         prompt += `
