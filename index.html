@@ -24,7 +24,17 @@
     <h2>Subir Documento</h2>
     <p>Selecciona un archivo <strong>DOCX</strong> para analizarlo automáticamente.</p>
 
-    <input type="file" id="pdfInput" accept=".pdf,.docx" />
+    <input type="file" id="pdfInput" accept=".docx" />
+
+    <!-- ✅ Opciones de análisis -->
+    <h2>¿Qué deseas analizar?</h2>
+    <form id="opcionesForm">
+      <label><input type="checkbox" name="opcion" value="contrato" checked /> Contrato (personalización)</label><br/>
+      <label><input type="checkbox" name="opcion" value="anexo1" /> Anexo 1: Itinerario</label><br/>
+      <label><input type="checkbox" name="opcion" value="anexo2" /> Anexo 2: Seguro médico</label><br/>
+      <label><input type="checkbox" name="opcion" value="anexo3" /> Anexo 3: Seguro de cancelación</label><br/>
+    </form>
+
     <button onclick="subirPDF()">Subir y analizar</button>
 
     <h2>Informe generado</h2>
@@ -36,24 +46,25 @@
     async function subirPDF() {
       const input = document.getElementById("pdfInput");
       const file = input.files[0];
-      
+
       if (!file) {
-        alert("Selecciona un archivo PDF o DOCX");
+        alert("Selecciona un archivo DOCX");
         return;
       }
 
-      console.log("📂 Archivo seleccionado:", file);
-
       const formData = new FormData();
       formData.append("file", file);
+
+      // ✅ Obtener opciones seleccionadas
+      const checkboxes = document.querySelectorAll('input[name="opcion"]:checked');
+      const opciones = Array.from(checkboxes).map(cb => cb.value);
+      formData.append("opciones", JSON.stringify(opciones));
 
       try {
         const res = await fetch("/api/analizar", {
           method: "POST",
           body: formData
         });
-
-        console.log("📤 Solicitud enviada. Estado:", res.status);
 
         const text = await res.text();
         document.getElementById("resultado").textContent = text;
