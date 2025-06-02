@@ -69,7 +69,7 @@ export default async function handler(req, res) {
       res.status(200).send(result);
 
     } catch (error) {
-      console.error("❌ Error interno:", error);
+      console.error("❌ Error interno:", error.message, error.stack);
       res.status(500).send("Error al procesar el archivo.");
     }
   });
