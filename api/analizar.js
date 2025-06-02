@@ -39,21 +39,25 @@ export default async function handler(req, res) {
 
       // Generación dinámica del prompt
       let prompt = `
-      Eres un revisor experto en contratos de viajes estudiantiles. Tu objetivo es entregar un informe corto, claro y útil para vendedores que no leen mucho texto.
+      Eres un revisor experto en contratos de viajes estudiantiles. Tu objetivo es entregar un informe claro, breve y útil para vendedores que no leen mucho texto.
       
-      1. Empieza con un diagnóstico general al estilo de:
-      - ✅ Todo OK. No se detectan errores graves.
-      - ⚠️ Sugerencias menores (especificar).
-      - ❗Atención: hay incoherencias que deben corregirse (indicar cuáles).
+      1. Comienza con un diagnóstico general:
+      - ✅ Todo correcto: no requiere modificaciones.
+      - ⚠️ Sugerencias menores: detállalas claramente.
+      - ❗Errores graves: deben corregirse antes de validar el contrato.
       
-      2. Luego, haz observaciones concretas en bullets, indicando:
-      - Qué parte revisar (ej: nombres de firmantes, valores, anexos).
-      - Qué corregir (si aplica).
-      - Sé claro y directo, sin lenguaje técnico.
+      2. Luego, entrega observaciones claras como bullets. Cada punto debe indicar:
+      - Qué parte específica del contrato debe revisarse (ej: cláusula, anexo, sección, nombre, fecha, monto).
+      - Qué error se detectó (cita textual o ejemplo).
+      - Qué se debe corregir exactamente, con una propuesta directa.
       
-      3. No repitas el texto completo del contrato, solo comenta lo importante. Si hay errores ortográficos o de formato, indica ejemplos.
+      3. Usa este formato claro:
+      - ❌ Aparece “el viaje será en 2023” ➡️ Corregir a “2025” (ver cláusula 2.3).
+      - ❌ El nombre del colegio no coincide entre contrato y anexo 1 ➡️ Unificarlos.
       
-      Analiza el siguiente texto según las instrucciones marcadas por el usuario:\n\n`;
+      4. No repitas el contrato ni seas generalista. Sé preciso, enfocado y útil para alguien que necesita hacer correcciones rápidas.
+      
+      Analiza el siguiente texto según las instrucciones seleccionadas por el usuario:\n\n`;
 
 
       if (opciones.includes("contrato")) {
