@@ -1,11 +1,10 @@
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs/promises";
-import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 
 export const config = {
-  api: { bodyParser: false } // necesario en Vercel para trabajar con Formidable
+  api: { bodyParser: false }
 };
 
 export default async function handler(req, res) {
@@ -35,27 +34,17 @@ export default async function handler(req, res) {
 
       console.log(`📄 Tipo de archivo recibido: ${mimeType}`);
 
-      let extractedText = "";
-
-      if (mimeType === "application/pdf") {
-        const buffer = await fs.readFile(filePath);
-        const data = await pdfParse(buffer);
-        extractedText = data.text;
-      } else if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-        const buffer = await fs.readFile(filePath);
-        const result = await mammoth.extractRawText({ buffer });
-        extractedText = result.value;
-      } else {
-        return res.status(400).send("Solo se aceptan archivos PDF o DOCX.");
+      if (mimeType !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        return res.status(400).send("Solo se aceptan archivos DOCX.");
       }
+
+      const buffer = await fs.readFile(filePath);
+      const result = await mammoth.extractRawText({ buffer });
+      const extractedText = result.value;
 
       console.log("📃 Texto extraído. Longitud:", extractedText.length);
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      if (!process.env.OPENAI_API_KEY) {
-        console.error("❌ No se encontró la clave OPENAI_API_KEY");
-        return res.status(500).send("Falta clave API de OpenAI.");
-      }
 
       const prompt = `Eres un abogado experto en contratos de agencias de viajes estudiantiles. Analiza el siguiente texto de contrato y entrega un informe con observaciones, errores, ambigüedades y recomendaciones claras:\n\n${extractedText.slice(0, 8000)}`;
 
@@ -64,12 +53,12 @@ export default async function handler(req, res) {
         messages: [{ role: "user", content: prompt }]
       });
 
-      const result = response.choices[0].message.content;
+      const resultText = response.choices[0].message.content;
       console.log("✅ Análisis completado.");
-      res.status(200).send(result);
+      res.status(200).send(resultText);
 
     } catch (error) {
-      console.error("❌ Error interno:", error.message, error.stack);
+      console.error("❌ Error interno:", error);
       res.status(500).send("Error al procesar el archivo.");
     }
   });
