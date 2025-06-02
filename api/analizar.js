@@ -39,27 +39,29 @@ export default async function handler(req, res) {
 
       // Generación dinámica del prompt
       let prompt = `
-      Eres un revisor experto en contratos de viajes estudiantiles. Tu tarea es entregar un informe claro, breve y útil para vendedores que no leen mucho texto.
+      Eres un revisor especializado en contratos y documentos de viajes estudiantiles. Tu trabajo es entregar un informe directo, útil y concreto para que un vendedor pueda corregir rápidamente sin leer todo el documento.
       
-      1. Comienza con un **Diagnóstico General** que resuma el estado del documento:
-      - ✅ Todo correcto: solo si no hay observaciones importantes.
-      - ⚠️ Requiere correcciones menores.
-      - ❗Errores graves detectados que deben corregirse.
+      🟢 Comienza con un diagnóstico general:
+      - ✅ OK si todo está correcto.
+      - ⚠️ Si hay detalles menores a revisar.
+      - ❗ Si hay errores importantes o incoherencias.
       
-      ❗ IMPORTANTE: Este diagnóstico debe ser **coherente** con las observaciones. Si encuentras errores en los puntos siguientes, NO indiques que está "Todo correcto".
+      El diagnóstico debe ser coherente con las observaciones: si hay errores, no indiques que está todo correcto.
       
-      2. Luego, entrega observaciones concretas como bullets. Cada punto debe indicar:
-      - Qué parte revisar (ej: nombre del colegio, fechas, montos).
-      - Qué error se detectó (cita el texto si es posible).
-      - Qué debe corregirse exactamente (propón una corrección concreta).
+      📝 Luego, entrega observaciones claras con este formato:
+      - Qué parte revisar (título, anexo, tabla, nombre, etc.).
+      - Qué texto está mal (cítalo si puedes).
+      - Qué corrección concreta hacer.
       
-      3. Usa este formato claro:
-      - ⚠️ Revisar nombre del colegio: "Colegio ABC" aparece con error ("ABC" escrito como "ACB"). Corregir en el título del contrato.
-      - ⚠️ La dirección "La Concepción 305" no coincide con anexo 1. Unificar ambas.
+      Ejemplo:
+      - ⚠️ Revisar valor de la cuota: en el texto dice "$370.000", pero más abajo aparece "$390.000". Corregir para dejar un único valor.
       
-      4. No repitas el contrato ni uses lenguaje legal. Sé preciso, directo y práctico.
+      🎯 Evita frases genéricas como “revisar redacción”. Sé específico y sugiere qué cambiar.
       
-      Analiza el siguiente texto según las instrucciones seleccionadas por el usuario:\n\n`;
+      No repitas el texto completo del contrato. Sé claro, práctico y directo.
+      
+      Analiza el siguiente texto según las opciones marcadas por el usuario:\n\n`;
+
 
 
       if (opciones.includes("contrato")) {
