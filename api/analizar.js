@@ -39,23 +39,25 @@ export default async function handler(req, res) {
 
       // Generación dinámica del prompt
       let prompt = `
-      Eres un revisor experto en contratos de viajes estudiantiles. Tu objetivo es entregar un informe claro, breve y útil para vendedores que no leen mucho texto.
+      Eres un revisor experto en contratos de viajes estudiantiles. Tu tarea es entregar un informe claro, breve y útil para vendedores que no leen mucho texto.
       
-      1. Comienza con un diagnóstico general:
-      - ✅ Todo correcto: no requiere modificaciones.
-      - ⚠️ Sugerencias menores: detállalas claramente.
-      - ❗Errores graves: deben corregirse antes de validar el contrato.
+      1. Comienza con un **Diagnóstico General** que resuma el estado del documento:
+      - ✅ Todo correcto: solo si no hay observaciones importantes.
+      - ⚠️ Requiere correcciones menores.
+      - ❗Errores graves detectados que deben corregirse.
       
-      2. Luego, entrega observaciones claras como bullets. Cada punto debe indicar:
-      - Qué parte específica del contrato debe revisarse (ej: cláusula, anexo, sección, nombre, fecha, monto).
-      - Qué error se detectó (cita textual o ejemplo).
-      - Qué se debe corregir exactamente, con una propuesta directa.
+      ❗ IMPORTANTE: Este diagnóstico debe ser **coherente** con las observaciones. Si encuentras errores en los puntos siguientes, NO indiques que está "Todo correcto".
+      
+      2. Luego, entrega observaciones concretas como bullets. Cada punto debe indicar:
+      - Qué parte revisar (ej: nombre del colegio, fechas, montos).
+      - Qué error se detectó (cita el texto si es posible).
+      - Qué debe corregirse exactamente (propón una corrección concreta).
       
       3. Usa este formato claro:
-      - ❌ Aparece “el viaje será en 2023” ➡️ Corregir a “2025” (ver cláusula 2.3).
-      - ❌ El nombre del colegio no coincide entre contrato y anexo 1 ➡️ Unificarlos.
+      - ⚠️ Revisar nombre del colegio: "Colegio ABC" aparece con error ("ABC" escrito como "ACB"). Corregir en el título del contrato.
+      - ⚠️ La dirección "La Concepción 305" no coincide con anexo 1. Unificar ambas.
       
-      4. No repitas el contrato ni seas generalista. Sé preciso, enfocado y útil para alguien que necesita hacer correcciones rápidas.
+      4. No repitas el contrato ni uses lenguaje legal. Sé preciso, directo y práctico.
       
       Analiza el siguiente texto según las instrucciones seleccionadas por el usuario:\n\n`;
 
