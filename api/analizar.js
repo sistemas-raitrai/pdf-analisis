@@ -52,6 +52,10 @@ export default async function handler(req, res) {
       console.log("📃 Texto extraído. Longitud:", extractedText.length);
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      if (!process.env.OPENAI_API_KEY) {
+        console.error("❌ No se encontró la clave OPENAI_API_KEY");
+        return res.status(500).send("Falta clave API de OpenAI.");
+      }
 
       const prompt = `Eres un abogado experto en contratos de agencias de viajes estudiantiles. Analiza el siguiente texto de contrato y entrega un informe con observaciones, errores, ambigüedades y recomendaciones claras:\n\n${extractedText.slice(0, 8000)}`;
 
