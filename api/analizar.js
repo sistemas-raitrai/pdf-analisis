@@ -111,7 +111,7 @@ Haz una revisión básica de este anexo. Solo alerta si hay omisiones graves o i
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
       const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o",
         messages: [{ role: "user", content: prompt }]
       });
 
