@@ -1,32 +1,10 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/analizar.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "estilos.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "RaiTrai - Logo.png",
-      "use": "@vercel/static"
-    }
+    { "src": "api/analizar.js", "use": "@vercel/node" }
   ],
   "routes": [
-    {
-      "src": "/api/analizar",
-      "dest": "/api/analizar.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/api/analizar", "dest": "/api/analizar.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
-
