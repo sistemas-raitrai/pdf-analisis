@@ -3,83 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Análisis de Documentos</title>
+  <title>Revisión de Contratos (Chile)</title>
   <link rel="stylesheet" href="/estilos.css" />
   <link rel="icon" type="image/png" href="logo.png" />
 </head>
 <body>
 
-  <!-- ✅ Encabezado adaptado con logo y título -->
+  <!-- ✅ Encabezado con logo y título -->
   <div style="background-color: #fff; padding: 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ccc;">
     <div style="display: flex; align-items: center;">
       <img src="/logo.png" alt="Logo Rai Trai" style="height: 60px; margin-right: 1rem;">
       <div>
-        <h2 style="margin: 0; font-size: 1.5rem; color: #2c3e50;">ANÁLISIS DE DOCUMENTOS</h2>
-        <p style="margin: 0; font-size: 0.9rem;"><strong>Revisión de contratos y programas</strong></p>
+        <h2 style="margin: 0; font-size: 1.5rem; color: #2c3e50;">REVISIÓN DE CONTRATOS</h2>
+        <p style="margin: 0; font-size: 0.9rem;">
+          <strong>Enfoque en legislación chilena · Ajustes mínimos</strong>
+        </p>
       </div>
     </div>
   </div>
 
   <!-- 🧾 Contenido principal -->
   <div class="contenedor">
-    <h2>Subir Documento</h2>
-    <p>Selecciona un archivo <strong>DOCX</strong> para analizarlo automáticamente.</p>
+    <h2>1. Ingresa el contrato</h2>
+    <p>
+      Puedes subir un archivo <strong>DOCX</strong> o pegar el texto del contrato.
+      Si usas ambos, se priorizará el archivo DOCX.
+    </p>
 
-    <input type="file" id="pdfInput" accept=".docx" />
+    <!-- Subir DOCX -->
+    <label for="fileInput"><strong>Subir archivo DOCX:</strong></label><br/>
+    <input type="file" id="fileInput" accept=".docx" style="margin-top: .5rem; margin-bottom: 1rem;" />
+
+    <!-- Pegar texto -->
+    <label for="textoContrato"><strong>O pegar texto del contrato:</strong></label>
+    <textarea
+      id="textoContrato"
+      placeholder="Pega aquí el texto del contrato si no quieres subir archivo..."
+      style="width: 100%; min-height: 180px; margin-top: .5rem; font-family: monospace; font-size: .9rem;"
+    ></textarea>
+
+    <!-- 🔧 Mini ayuda para tu jefa -->
+    <p style="font-size: 0.85rem; color: #555; margin-top: .5rem;">
+      Sugerencia: antes de pegar, puedes agregar arriba una nota tipo:<br/>
+      <em>“Contrato de prestación de servicios para coordinadores de viaje de la empresa RaiTrai, bajo legislación chilena.”</em>
+    </p>
 
     <!-- ✅ Opciones de análisis -->
-    <h2>¿Qué deseas analizar?</h2>
+    <h2>2. Opciones de análisis</h2>
     <form id="opcionesForm">
-      <label><input type="checkbox" name="opcion" value="contrato" checked /> Contrato (personalización)</label><br/>
-      <label><input type="checkbox" name="opcion" value="anexo1" /> Anexo 1: Itinerario</label><br/>
-      <label><input type="checkbox" name="opcion" value="anexo2" /> Anexo 2: Seguro médico</label><br/>
-      <label><input type="checkbox" name="opcion" value="anexo3" /> Anexo 3: Seguro de cancelación</label><br/>
-      <label><input type="checkbox" name="opcion" value="otro" /> Otro tipo de documento: ortografía y redacción</label><br/>
+      <label>
+        <input type="checkbox" name="opcion" value="riesgos" checked />
+        Enfatizar riesgos para la empresa (⚠️ / ❗)
+      </label><br/>
+      <label>
+        <input type="checkbox" name="opcion" value="ajustes_minimos" checked />
+        Sugerir solo <strong>ajustes mínimos</strong> (mantener estilo y estructura)
+      </label><br/>
+      <label>
+        <input type="checkbox" name="opcion" value="resumen" />
+        Agregar <strong>resumen ejecutivo</strong> al final (máx. 10 viñetas)
+      </label><br/>
     </form>
 
-        <!-- 🔘 Botón separado visualmente -->
+    <!-- 🔘 Botón de envío -->
     <div style="margin-top: 1.5rem;">
-      <button onclick="subirPDF()">Analizar</button>
+      <button onclick="subirPDF()">Analizar contrato</button>
     </div>
 
-    <h2>Informe generado</h2>
-    <div id="estado" style="margin-top: 1rem; font-style: italic; color: #555;"></div>
-    <pre id="resultado">Aquí aparecerá el resultado del análisis.</pre>
+    <!-- Estado y resultado -->
+    <h2 style="margin-top: 2rem;">3. Informe generado</h2>
+    <div id="estado" style="margin-top: 0.5rem; font-style: italic; color: #555;"></div>
+    <pre id="resultado" style="white-space: pre-wrap; background: #f9f9f9; padding: 1rem; border-radius: 4px; border: 1px solid #ddd; margin-top: .75rem;">
+Aquí aparecerá el resultado del análisis.
+    </pre>
   </div>
 
   <!-- 📜 Script de subida -->
   <script>
     async function subirPDF() {
-      const input = document.getElementById("pdfInput");
-      const file = input.files[0];
-      const opciones = Array.from(document.querySelectorAll("input[name='opcion']:checked")).map(cb => cb.value);
-    
-      if (!file) {
-        alert("Selecciona un archivo DOCX");
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+
+      const textoContrato = document.getElementById("textoContrato").value.trim();
+      const opciones = Array.from(
+        document.querySelectorAll("input[name='opcion']:checked")
+      ).map(cb => cb.value);
+
+      // Validación: al menos archivo o texto
+      if (!file && !textoContrato) {
+        alert("Debes subir un archivo DOCX o pegar el texto del contrato.");
         return;
       }
-    
+
       const formData = new FormData();
-      formData.append("file", file);
+
+      // Adjuntar archivo si existe
+      if (file) {
+        formData.append("file", file);
+      }
+
+      // Adjuntar texto si existe
+      if (textoContrato) {
+        // El backend busca fields.texto o fields.textoManual
+        formData.append("texto", textoContrato);
+      }
+
+      // Opciones en JSON
       formData.append("opciones", JSON.stringify(opciones));
-    
+
       // ⏳ Mostrar mensaje de carga
-      document.getElementById("estado").textContent = "⏳ Analizando el documento...";
-    
+      const estadoEl = document.getElementById("estado");
+      const resultadoEl = document.getElementById("resultado");
+      estadoEl.textContent = "⏳ Analizando el contrato...";
+      resultadoEl.textContent = "";
+
       try {
         const res = await fetch("/api/analizar", {
           method: "POST",
           body: formData
         });
-    
+
         const text = await res.text();
-        document.getElementById("resultado").textContent = text;
+
+        if (!res.ok) {
+          resultadoEl.textContent =
+            "⚠️ Error desde el servidor:\n\n" + text;
+        } else {
+          resultadoEl.textContent = text || "No se recibió texto de respuesta.";
+        }
       } catch (err) {
         console.error("❌ Error:", err);
         alert("Hubo un error al conectar con el servidor.");
       } finally {
-        // ✅ Limpiar mensaje
-        document.getElementById("estado").textContent = "";
+        estadoEl.textContent = "";
       }
     }
   </script>
