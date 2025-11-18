@@ -104,6 +104,9 @@ Aquí aparecerá el resultado del análisis.
         document.querySelectorAll("input[name='opcion']:checked")
       ).map(cb => cb.value);
 
+      const extraPrompt = document.getElementById("extraPrompt").value.trim();
+
+
       // Validación: al menos archivo o texto
       if (!file && !textoContrato) {
         alert("Debes subir un archivo DOCX o pegar el texto del contrato.");
@@ -125,6 +128,12 @@ Aquí aparecerá el resultado del análisis.
 
       // Opciones en JSON
       formData.append("opciones", JSON.stringify(opciones));
+
+      // Instrucciones adicionales, si las hay
+      if (extraPrompt) {
+        formData.append("extraPrompt", extraPrompt);
+      }
+
 
       // ⏳ Mostrar mensaje de carga
       const estadoEl = document.getElementById("estado");
