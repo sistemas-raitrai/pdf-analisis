@@ -8,7 +8,7 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  console.log("📥 Iniciando análisis de archivo...");
+  console.log("📥 Iniciando análisis de contrato...");
 
   const form = formidable({
     keepExtensions: true,
@@ -23,121 +23,160 @@ export default async function handler(req, res) {
     }
 
     try {
-      const fileObj = files.file?.[0] || Object.values(files)[0];
-      const filePath = fileObj?.filepath;
-      const mimeType = fileObj?.mimetype;
+      // Opciones (checkboxes en el front).
+      // Ejemplos recomendados:
+      //  - "riesgos"          → enfatizar riesgos
+      //  - "ajustes_minimos"  → insistir en no cambiar mucho
+      //  - "resumen"          → agregar resumen ejecutivo al final
       const opciones = JSON.parse(fields.opciones?.[0] || "[]");
 
-      if (!filePath || mimeType !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-        return res.status(400).send("Solo se aceptan archivos DOCX.");
+      /* ─────────────────────────────────────────────
+         1. OBTENER TEXTO: DOCX o TEXTO PEGADO
+      ───────────────────────────────────────────── */
+
+      let extractedText = "";
+
+      // a) Intentar leer archivo DOCX (si viene)
+      const fileObj = files.file?.[0] || Object.values(files)[0];
+
+      if (fileObj && fileObj.filepath) {
+        const filePath = fileObj.filepath;
+        const mimeType = fileObj.mimetype;
+
+        if (mimeType !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+          console.warn("⚠️ Tipo de archivo no DOCX, se intentará usar texto pegado.");
+        } else {
+          const buffer = await fs.readFile(filePath);
+          const result = await mammoth.extractRawText({ buffer });
+          extractedText = result.value || "";
+          console.log("📃 Texto extraído de DOCX. Longitud:", extractedText.length);
+        }
       }
 
-      const buffer = await fs.readFile(filePath);
-      const result = await mammoth.extractRawText({ buffer });
-      const extractedText = result.value;
-      console.log("📃 Texto extraído. Longitud:", extractedText.length);
+      // b) Si no hubo DOCX válido o venía vacío, usar texto pegado
+      if (!extractedText) {
+        // name="texto" o name="textoManual" en tu formulario
+        const textoPegado =
+          fields.texto?.[0] ||
+          fields.textoManual?.[0] ||
+          "";
 
-      // Generación dinámica del prompt
+        if (!textoPegado.trim()) {
+          return res
+            .status(400)
+            .send("Debes subir un archivo DOCX o pegar el texto del contrato.");
+        }
+
+        extractedText = textoPegado.toString();
+        console.log("📃 Texto pegado recibido. Longitud:", extractedText.length);
+      }
+
+      // Por seguridad, cortamos si es MUY largo
+      const maxChars = 12000;
+      const textoLimitado = extractedText.slice(0, maxChars);
+
+      /* ─────────────────────────────────────────────
+         2. ARMAR PROMPT PARA REVISIÓN DE CONTRATO
+            (LEGISLACIÓN CHILENA)
+      ───────────────────────────────────────────── */
+
+      const quiereResumen      = opciones.includes("resumen");
+      const focoRiesgos        = opciones.includes("riesgos");
+      const focoAjustesMinimos = opciones.includes("ajustes_minimos");
+
       let prompt = `
-      Eres un revisor especializado en contratos y documentos de viajes estudiantiles. Tu trabajo es entregar un informe directo, útil y concreto para que un vendedor pueda corregir rápidamente sin leer todo el documento.
-      
-      🟢 Comienza con un diagnóstico general:
-      - ✅ OK si todo está correcto.
-      - ⚠️ Si hay detalles menores a revisar.
-      - ❗ Si hay errores importantes o incoherencias.
-      
-      El diagnóstico debe ser coherente con las observaciones: si hay errores, no indiques que está todo correcto.
-      
-      📝 Luego, entrega observaciones claras con este formato:
-      - Qué parte revisar (título, anexo, tabla, nombre, etc.).
-      - Qué texto está mal (cítalo si puedes).
-      - Qué corrección concreta hacer.
-      
-      Ejemplo:
-      - ⚠️ Revisar valor de la cuota: en el texto dice "$370.000", pero más abajo aparece "$390.000". Corregir para dejar un único valor.
-      
-      🎯 Evita frases genéricas como “revisar redacción”. Sé específico y sugiere qué cambiar.
-      
-      No repitas el texto completo del contrato. Sé claro, práctico y directo.
-      
-      Analiza el siguiente texto según las opciones marcadas por el usuario:\n\n`;
+Eres abogado/a con experiencia en derecho laboral y contractual chileno.
 
+Te entregaré el texto de un contrato (o borrador de contrato) usado por una empresa en Chile. 
+La jefatura que lo revisa no es abogada y NO quiere cambiar demasiado el estilo ni la estructura 
+del contrato, solo corregir lo necesario.
 
+Tu objetivo es entregar un informe claro, práctico y accionable.
 
-      if (opciones.includes("contrato")) {
+1) DIAGNÓSTICO GENERAL
+- Resume en 3–5 líneas el estado general del contrato:
+  - ✅ Si en general está coherente y solo ves ajustes menores.
+  - ⚠️ Si hay algunos riesgos o ambigüedades relevantes.
+  - ❗ Si detectas problemas serios o cláusulas potencialmente muy riesgosas o discutibles.
+
+El diagnóstico debe ser coherente con las observaciones que darás después.
+
+2) LISTA DE OBSERVACIONES
+Entrega las observaciones en viñetas, usando SIEMPRE este formato:
+
+- [nivel] [tema]  
+  • Texto actual: "frase o cláusula relevante"  
+  • Riesgo / problema (en lenguaje simple).  
+  • Sugerencia concreta de mejora respetando lo más posible el estilo original.
+
+Donde:
+- Usa ✅ cuando sea solo mejora de redacción/claridad.  
+- Usa ⚠️ cuando haya un riesgo moderado.  
+- Usa ❗ cuando el riesgo sea alto para la empresa.
+
+Prioriza especialmente:
+- Definición de funciones y obligaciones de cada parte.
+- Responsabilidad de la empresa y de la otra parte.
+- Causales y forma de término anticipado.
+- Cláusulas de confidencialidad, no competencia y propiedad intelectual.
+- Jurisdicción, resolución de conflictos y ley aplicable.
+- Plazos, montos, reajustes, intereses, multas, descuentos, etc.
+
+NO reescribas el contrato completo.
+NO prometas que algo es “100% legal”; usa expresiones como 
+“podría ser riesgoso”, “podría interpretarse”, “podría discutirse”, etc.,
+siempre en contexto de legislación chilena vigente.
+`;
+
+      if (focoRiesgos) {
         prompt += `
-🔹 CONTRATO:
-Revisa exclusivamente los elementos personalizables del contrato tipo (nombre de firmantes, valores, fechas, colegios, condiciones de pago, etc.). Detecta errores, omisiones o incoherencias respecto al modelo original. Ignora cláusulas fijas del contrato si no han sido modificadas.\n\n`;
+Además, enfatiza en las cláusulas que puedan ser más riesgosas para la EMPRESA, 
+explicando claramente por qué y qué alternativas podrían considerarse.  
+`;
       }
 
-      if (opciones.includes("anexo1")) {
+      if (focoAjustesMinimos) {
         prompt += `
-🔹 ANEXO 1 (Itinerario y Programa):
-Revisa lo siguiente de forma estricta y concreta:
-
-1. Detecta si las actividades indicadas día por día (por ejemplo: "Floating", "Escape Room", "Discoteca", "Tambo Viejo", etc.) están **mencionadas también en la sección final del anexo ("El programa incluye")**. Enumera las actividades por día si puedes.
-
-2. Marca con ⚠️ si hay alguna actividad que aparece en el itinerario diario y no aparece en la lista de “Incluye” o viceversa.
-
-3. Revisa si hay **errores de coherencia** como:
-   - Actividades repetidas o en días no posibles (ej: Floating el mismo día de salida).
-   - Inconsistencias de horario (ej: actividades después del check-out).
-   - Cuotas mal descritas o valores no coincidentes con lo indicado al final.
-
-4. Da observaciones breves y claras. Usa este formato:
-   - ⚠️ Actividad "Escape Room" aparece el Día 4 pero no está en la lista de “Incluye”. Agregar en la sección final.
-   - ⚠️ En el Día 2 se menciona “Discoteca”, pero no hay traslado descrito. Confirmar.
-
-5. Si puedes, sugiere la corrección concreta para cada observación.
-
-No repitas el texto completo. Usa lenguaje claro, sin jerga técnica. Resume el itinerario por día si puedes para facilitar la revisión rápida por parte del vendedor.\n\n`;
-}
-
-      if (opciones.includes("anexo2")) {
-        prompt += `
-🔹 ANEXO 2 (Seguro Médico):
-Verifica que el seguro médico descrito en este anexo coincida con lo que se menciona en el contrato y que no haya contradicciones. Evalúa la claridad de cobertura, condiciones, exclusiones y vigencia.\n\n`;
+Recuerda que la idea es hacer AJUSTES MÍNIMOS: cuando sugieras cambios, intenta 
+mantener la estructura y el tono del texto original, cambiando solo lo necesario 
+para ganar claridad y reducir riesgos.  
+`;
       }
 
-      if (opciones.includes("anexo3")) {
+      if (quiereResumen) {
         prompt += `
-🔹 ANEXO 3 (Seguro de Cancelación):
-Haz una revisión básica de este anexo. Solo alerta si hay omisiones graves o incoherencias importantes. Este anexo suele mantenerse fijo.\n\n`;
+Al final de tu respuesta agrega un apartado "RESUMEN EJECUTIVO" con máximo 10 viñetas, 
+pensado para una jefatura ocupada (sin tecnicismos legales).  
+`;
       }
 
-      // Adjunta el texto completo (o parte si es muy largo)
-      prompt += `Texto del documento:\n\n${extractedText.slice(0, 8000)}`;
+      prompt += `
+
+TEXTO DEL CONTRATO A ANALIZAR
+(Recuerda: no reescribas todo, solo analiza y comenta según lo anterior):
+
+${textoLimitado}
+`;
+
+      /* ─────────────────────────────────────────────
+         3. LLAMADO A OPENAI
+      ───────────────────────────────────────────── */
 
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }]
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.2
       });
 
       const resultText = response.choices[0].message.content;
-      console.log("✅ Análisis completado.");
-      res.status(200).send(resultText);
+      console.log("✅ Análisis de contrato completado.");
+      return res.status(200).send(resultText);
 
     } catch (error) {
       console.error("❌ Error interno:", error);
-      res.status(500).send("Error al procesar el archivo.");
+      return res.status(500).send("Error al procesar el archivo.");
     }
-    if (opciones.includes("otro")) {
-      prompt += `
-🔹 OTRO TIPO DE DOCUMENTO (Ortografía y Redacción):
-Haz una revisión general del texto. Detecta errores de ortografía, palabras mal escritas, incoherencias gramaticales o frases mal construidas.
-
-1. Usa ejemplos concretos. Cita la palabra o frase exacta con error.
-2. Sugiere una versión corregida.
-3. No necesitas hacer un análisis jurídico o técnico. Solo enfócate en mejorar la redacción, claridad y estilo del documento.
-
-Formato recomendado:
-- ❌ Error: "fucionado" → ✅ Corrección: "fusionado"
-- ❌ Frase confusa: "por motivo de razones ajenas" → ✅ Sugerencia: "por causas externas".
-
-Hazlo en formato conciso, útil y fácil de leer.
-\n\n`;
-}
   });
 }
