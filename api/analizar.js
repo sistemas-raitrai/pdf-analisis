@@ -26,9 +26,8 @@ export default async function handler(req, res) {
       // Opciones (checkboxes en el front).
       const opciones = JSON.parse(fields.opciones?.[0] || "[]");
 
-      // Instrucciones adicionales que escribió la jefa
-      const extraPrompt =
-        (fields.extraPrompt?.[0] || "").toString().trim();
+      // Instrucciones adicionales que escribió la usuaria
+      const extraPrompt = (fields.extraPrompt?.[0] || "").toString().trim();
 
       /* ─────────────────────────────────────────────
          1. OBTENER TEXTO: DOCX o TEXTO PEGADO
@@ -75,15 +74,64 @@ export default async function handler(req, res) {
       const textoLimitado = extractedText.slice(0, maxChars);
 
       /* ─────────────────────────────────────────────
-         2. ARMAR PROMPT PARA REVISIÓN DE CONTRATO
-            (LEGISLACIÓN CHILENA)
+         2. ARMAR PROMPT SEGÚN MODO
+            - Modo legal (por defecto)
+            - Modo SOLO REDACCIÓN / ORTOGRAFÍA
       ───────────────────────────────────────────── */
 
       const quiereResumen      = opciones.includes("resumen");
       const focoRiesgos        = opciones.includes("riesgos");
       const focoAjustesMinimos = opciones.includes("ajustes_minimos");
+      const soloRedaccion      = opciones.includes("solo_redaccion");
 
-      let prompt = `
+      let prompt = "";
+
+      if (soloRedaccion) {
+        // 🔹 MODO SOLO REDACCIÓN / ORTOGRAFÍA
+        prompt = `
+Eres corrector/a de estilo y ortografía en español de Chile.
+
+Voy a darte el texto de un contrato o documento jurídico. Tu tarea NO ES hacer análisis legal
+ni proponer cambios de contenido, sino únicamente mejorar:
+
+- Ortografía
+- Gramática
+- Puntuación
+- Claridad y fluidez de las frases
+- Coherencia en mayúsculas/minúsculas, formatos de números, etc.
+
+Instrucciones importantes:
+- Mantén el significado jurídico de cada cláusula.
+- No agregues ni elimines obligaciones, montos, plazos ni nombres.
+- No cambies la estructura del contrato (títulos, numeración de cláusulas, etc.).
+- Si una frase es confusa, propone una versión más clara, pero con el mismo efecto.
+- No hace falta que reescribas todo el contrato: concéntrate en las partes donde veas mejoras claras.
+
+Formato de salida:
+- Lista de observaciones puntuales, por ejemplo:
+
+  - ❌ Texto original: "El COORDINADOR deberá de realizar..."
+    ✅ Sugerencia: "El COORDINADOR deberá realizar..."
+
+  - ❌ Texto original: "se deja constancia que"
+    ✅ Sugerencia: "se deja constancia de que"
+
+Al final, si lo consideras útil, puedes proponer una versión corregida de alguna cláusula 
+que tenga muchos detalles, pero evita pegar todo el contrato reescrito.
+`;
+
+        if (extraPrompt) {
+          prompt += `
+INSTRUCCIONES ADICIONALES DE LA USUARIA (MODO REDACCIÓN):
+"${extraPrompt}"
+
+Ten especialmente en cuenta estas indicaciones al proponer correcciones de estilo.
+`;
+        }
+
+      } else {
+        // 🔹 MODO LEGAL / RIESGOS (el que ya teníamos)
+        prompt = `
 Eres abogado/a con experiencia en derecho laboral y contractual chileno.
 
 Te entregaré el texto de un contrato (o borrador de contrato) usado por una empresa en Chile. 
@@ -127,43 +175,43 @@ NO prometas que algo es “100% legal”; usa expresiones como
 siempre en contexto de legislación chilena vigente.
 `;
 
-      if (focoRiesgos) {
-        prompt += `
+        if (focoRiesgos) {
+          prompt += `
 Además, enfatiza en las cláusulas que puedan ser más riesgosas para la EMPRESA, 
 explicando claramente por qué y qué alternativas podrían considerarse.  
 `;
-      }
+        }
 
-      if (focoAjustesMinimos) {
-        prompt += `
+        if (focoAjustesMinimos) {
+          prompt += `
 Recuerda que la idea es hacer AJUSTES MÍNIMOS: cuando sugieras cambios, intenta 
 mantener la estructura y el tono del texto original, cambiando solo lo necesario 
 para ganar claridad y reducir riesgos.  
 `;
-      }
+        }
 
-      if (quiereResumen) {
-        prompt += `
+        if (quiereResumen) {
+          prompt += `
 Al final de tu respuesta agrega un apartado "RESUMEN EJECUTIVO" con máximo 10 viñetas, 
 pensado para una jefatura ocupada (sin tecnicismos legales).  
 `;
-      }
+        }
 
-      // 🔹 Instrucciones adicionales de la usuaria (si escribió algo)
-      if (extraPrompt) {
-        prompt += `
+        if (extraPrompt) {
+          prompt += `
 INSTRUCCIONES ADICIONALES DE LA USUARIA:
 "${extraPrompt}"
 
-Ten especialmente en cuenta estas indicaciones para priorizar tu análisis
-y tus comentarios.  
+Ten especialmente en cuenta estas indicaciones para priorizar tu análisis y tus comentarios.
 `;
+        }
       }
 
+      // Texto del contrato al final del prompt (se comparte para ambos modos)
       prompt += `
 
-TEXTO DEL CONTRATO A ANALIZAR
-(Recuerda: no reescribas todo, solo analiza y comenta según lo anterior):
+TEXTO DEL CONTRATO / DOCUMENTO A ANALIZAR
+(Recuerda: responde solo según el modo indicado arriba):
 
 ${textoLimitado}
 `;
