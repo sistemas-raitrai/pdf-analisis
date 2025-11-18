@@ -24,11 +24,11 @@ export default async function handler(req, res) {
 
     try {
       // Opciones (checkboxes en el front).
-      // Ejemplos recomendados:
-      //  - "riesgos"          → enfatizar riesgos
-      //  - "ajustes_minimos"  → insistir en no cambiar mucho
-      //  - "resumen"          → agregar resumen ejecutivo al final
       const opciones = JSON.parse(fields.opciones?.[0] || "[]");
+
+      // Instrucciones adicionales que escribió la jefa
+      const extraPrompt =
+        (fields.extraPrompt?.[0] || "").toString().trim();
 
       /* ─────────────────────────────────────────────
          1. OBTENER TEXTO: DOCX o TEXTO PEGADO
@@ -55,7 +55,6 @@ export default async function handler(req, res) {
 
       // b) Si no hubo DOCX válido o venía vacío, usar texto pegado
       if (!extractedText) {
-        // name="texto" o name="textoManual" en tu formulario
         const textoPegado =
           fields.texto?.[0] ||
           fields.textoManual?.[0] ||
@@ -147,6 +146,17 @@ para ganar claridad y reducir riesgos.
         prompt += `
 Al final de tu respuesta agrega un apartado "RESUMEN EJECUTIVO" con máximo 10 viñetas, 
 pensado para una jefatura ocupada (sin tecnicismos legales).  
+`;
+      }
+
+      // 🔹 Instrucciones adicionales de la usuaria (si escribió algo)
+      if (extraPrompt) {
+        prompt += `
+INSTRUCCIONES ADICIONALES DE LA USUARIA:
+"${extraPrompt}"
+
+Ten especialmente en cuenta estas indicaciones para priorizar tu análisis
+y tus comentarios.  
 `;
       }
 
