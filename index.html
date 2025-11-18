@@ -98,6 +98,10 @@
     <pre id="resultado" style="white-space: pre-wrap; background: #f9f9f9; padding: 1rem; border-radius: 4px; border: 1px solid #ddd; margin-top: .75rem;">
 Aquí aparecerá el resultado del análisis.
     </pre>
+
+    <div style="margin-top: 1.5rem;">
+       <button type="button" onclick="exportarDOCX()" style="margin-left: .5rem;">
+    </div>
   </div>
 
   <!-- 📜 Script de subida -->
@@ -169,6 +173,57 @@ Aquí aparecerá el resultado del análisis.
         estadoEl.textContent = "";
       }
     }
+
+        async function exportarDOCX() {
+      const resultadoEl = document.getElementById("resultado");
+      const estadoEl = document.getElementById("estado");
+
+      const contenido = (resultadoEl.textContent || "").trim();
+
+      // Comprobar que haya un informe real
+      if (
+        !contenido ||
+        contenido === "Aquí aparecerá el resultado del análisis."
+      ) {
+        alert("Primero debes generar un informe (Analizar contrato) antes de exportar a DOCX.");
+        return;
+      }
+
+      try {
+        estadoEl.textContent = "📄 Generando archivo DOCX...";
+
+        const res = await fetch("/api/export-docx", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ contenido })
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          alert("Error al generar el DOCX:\n\n" + text);
+          return;
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "informe-contrato.docx"; // nombre del archivo
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("❌ Error generando DOCX:", err);
+        alert("Hubo un error al generar el archivo DOCX.");
+      } finally {
+        estadoEl.textContent = "";
+      }
+    }
+
   </script>
 
 </body>
